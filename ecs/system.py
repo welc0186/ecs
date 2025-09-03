@@ -6,6 +6,8 @@ import six
 
 from ecs.entity_manager import EntityManager
 
+from ecs.system_manager import SystemManager
+
 
 class Component(object):
     """Class from which all components should derive."""
@@ -26,16 +28,16 @@ class System(object):
         multiple entity managers. The reason is performance. See
         :meth:`ecs.managers.SystemManager.update()` for more information.
         """
-        self.system_manager = None
+        self.system_manager: SystemManager | None = None
         """The system manager to which this system belongs. Again, a system is
         only allowed to belong to one at a time."""
-        self.priority = None
+        self.priority: int | None = None
         """The priority for this system when the system manager runs
         :meth:`ecs.managers.SystemManager.update()`. Must be a non-negative
         integer with 0 being the highest priority."""
 
     @abstractmethod
-    def update(self, dt):
+    def update(self, dt: float) -> None:
         """Run the system for this frame. This method is called by the system
         manager, and is where the functionality of the system is implemented.
 
