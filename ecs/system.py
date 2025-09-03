@@ -9,12 +9,6 @@ from ecs.entity_manager import EntityManager
 from ecs.system_manager import SystemManager
 
 
-class Component(object):
-    """Class from which all components should derive."""
-
-    pass
-
-
 @six.add_metaclass(ABCMeta)
 class System(object):
     """An object that represents an operation on a set of objects from the game

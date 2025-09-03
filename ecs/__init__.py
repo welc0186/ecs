@@ -3,11 +3,13 @@
 from ecs import metadata as _metadata
 
 # Provide a common namespace for these classes.
-from ecs.system import Component, System  # NOQA
+from ecs.system import System  # NOQA
 from ecs.system_manager import SystemManager
 
 from ecs.entity import Entity
-from ecs.entity_manager import EntityManager  # NOQA
+from ecs.entity_manager import EntityManager
+
+from ecs.component import Component  # NOQA
 
 
 __version__ = _metadata.version
