@@ -1,16 +1,20 @@
 import re
 import random
 
+from EntityManager import EntityManager
 from pytest import fixture, raises
 import pytest
+
 usefixtures = pytest.mark.usefixtures
 from mock import MagicMock, sentinel
 
 from ecs.models import Component, System
-from ecs.managers import EntityManager, SystemManager
+from ecs.managers import SystemManager
 from ecs.exceptions import (
-    NonexistentComponentTypeForEntity, DuplicateSystemTypeError,
-    SystemAlreadyAddedToManagerError)
+    NonexistentComponentTypeForEntity,
+    DuplicateSystemTypeError,
+    SystemAlreadyAddedToManagerError,
+)
 
 from tests.helpers import assert_exc_info_msg
 
@@ -26,8 +30,7 @@ class TestEntityManager(object):
 
     @fixture
     def component_types(self):
-        return [
-            type('Component' + str(i), (Component,), {}) for i in range(5)]
+        return [type("Component" + str(i), (Component,), {}) for i in range(5)]
 
     @fixture
     def components(self, component_types):
@@ -51,19 +54,21 @@ class TestEntityManager(object):
 
     class TestPairsForType(object):
         def test_existing_component_type(
-                self, manager, entities, components, component_types):
+            self, manager, entities, components, component_types
+        ):
             assert list(manager.pairs_for_type(component_types[0])) == [
                 (entities[0], components[0]),
                 (entities[1], components[5]),
-                (entities[3], components[0])]
+                (entities[3], components[0]),
+            ]
 
-        def test_nonexistent_component_type(
-                self, manager, entities, component_types):
+        def test_nonexistent_component_type(self, manager, entities, component_types):
             assert list(manager.pairs_for_type(component_types[2])) == []
 
     class TestRemoveComponent(object):
         def test_remove_some_of_a_component(
-                self, manager, entities, components, component_types):
+            self, manager, entities, components, component_types
+        ):
             manager.remove_component(entities[3], component_types[0])
             assert manager.database == {
                 component_types[0]: {
@@ -75,11 +80,12 @@ class TestEntityManager(object):
                 },
                 component_types[4]: {
                     entities[3]: components[4],
-                }
+                },
             }
 
         def test_remove_all_of_a_component(
-                self, manager, entities, components, component_types):
+            self, manager, entities, components, component_types
+        ):
             manager.remove_component(entities[3], component_types[4])
             assert manager.database == {
                 component_types[0]: {
@@ -93,32 +99,36 @@ class TestEntityManager(object):
             }
 
         def test_remove_nonexistent_relationship(
-                self, manager, entities, components, component_types):
+            self, manager, entities, components, component_types
+        ):
             db_before = manager.database
             manager.remove_component(entities[0], component_types[4])
             assert db_before == manager.database
 
     class TestComponentForEntityType(object):
-        def test_normal_usage(
-                self, manager, entities, components, component_types):
-            assert manager.component_for_entity(
-                entities[3], component_types[4]) == components[4]
+        def test_normal_usage(self, manager, entities, components, component_types):
+            assert (
+                manager.component_for_entity(entities[3], component_types[4])
+                == components[4]
+            )
 
         def test_raises_error_on_nonexistent_component_type(
-                self, manager, entities, components, component_types):
+            self, manager, entities, components, component_types
+        ):
             with raises(NonexistentComponentTypeForEntity) as exc_info:
                 manager.component_for_entity(entities[3], component_types[1])
             assert_exc_info_msg(
                 exc_info,
-                "Nonexistent component type: "
-                "`Component1' for entity: `Entity(3)'")
+                "Nonexistent component type: " "`Component1' for entity: `Entity(3)'",
+            )
 
-    def test_remove_entity(
-            self, manager, entities, components, component_types):
+    def test_remove_entity(self, manager, entities, components, component_types):
         manager.remove_entity(entities[3])
         assert manager.database == {
             component_types[0]: {
-                entities[0]: components[0], entities[1]: components[5]},
+                entities[0]: components[0],
+                entities[1]: components[5],
+            },
             component_types[3]: {entities[4]: components[3]},
         }
 
@@ -127,10 +137,9 @@ class TestSystemManager(object):
     @fixture
     def system_types(self):
         return [
-            type('System' + str(i),
-                 (System,),
-                 {'update': MagicMock(), 'order': i})
-            for i in range(5)]
+            type("System" + str(i), (System,), {"update": MagicMock(), "order": i})
+            for i in range(5)
+        ]
 
     @fixture
     def systems(self, system_types):
@@ -176,11 +185,9 @@ class TestSystemManager(object):
             def test_raises_error(self, manager, systems):
                 with raises(DuplicateSystemTypeError) as exc_info:
                     manager.add_system(systems[1])
-                assert_exc_info_msg(
-                    exc_info, "Duplicate system type: `System1'")
+                assert_exc_info_msg(exc_info, "Duplicate system type: `System1'")
 
-            def test_system_and_entity_managers_not_set(
-                    self, manager, system_types):
+            def test_system_and_entity_managers_not_set(self, manager, system_types):
                 system = system_types[0]()
                 with raises(DuplicateSystemTypeError):
                     manager.add_system(system)
@@ -197,10 +204,10 @@ class TestSystemManager(object):
                 assert re.match(
                     "System `.*' which belongs to system manager `.*'"
                     "attempted to be added to system manager `.*'$",
-                    str(exc_info.value))
+                    str(exc_info.value),
+                )
 
-            def test_system_and_entity_managers_not_changed(
-                    self, manager, systems):
+            def test_system_and_entity_managers_not_changed(self, manager, systems):
                 manager2 = SystemManager(sentinel.entity_manager)
                 with raises(SystemAlreadyAddedToManagerError):
                     manager2.add_system(systems[0])
