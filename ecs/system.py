@@ -1,12 +1,19 @@
 """Entity, Component, and System classes."""
 
 from abc import ABCMeta, abstractmethod
+from collections.abc import Iterator
+from typing import Type, TypeGuard, TypeVar, Tuple
+from ecs.entity import Entity
 
 import six
 
 from ecs.entity_manager import EntityManager
 
 from ecs.system_manager import SystemManager
+
+from ecs.component import Component
+
+C = TypeVar("C", bound=Component)
 
 
 @six.add_metaclass(ABCMeta)
@@ -29,6 +36,21 @@ class System(object):
         """The priority for this system when the system manager runs
         :meth:`ecs.managers.SystemManager.update()`. Must be a non-negative
         integer with 0 being the highest priority."""
+
+    def _is_entity_manager(self, entity_manager) -> TypeGuard[EntityManager]:
+        return entity_manager is not None and isinstance(entity_manager, EntityManager)
+
+    def get_components(self, component_type: Type[C]) -> Iterator[Tuple[Entity, C]]:
+        """Get all entities with the specified component"""
+        if self._is_entity_manager(self.entity_manager):
+            return self.entity_manager.pairs_for_type(component_type)
+        return iter([])
+
+    def get_component(self, entity: Entity, component_type: Type[C]) -> C | None:
+        """Get a specific component for an entity"""
+        if self._is_entity_manager(self.entity_manager):
+            return self.entity_manager.component_for_entity(entity, component_type)
+        return None
 
     @abstractmethod
     def update(self, dt: float) -> None:
