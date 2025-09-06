@@ -46,11 +46,16 @@ class System(object):
             return self.entity_manager.pairs_for_type(component_type)
         return iter([])
 
-    def get_component(self, entity: Entity, component_type: Type[C]) -> C | None:
+    def get_component_safe(self, entity: Entity, component_type: Type[C]) -> C | None:
         """Get a specific component for an entity"""
         if self._is_entity_manager(self.entity_manager):
-            return self.entity_manager.component_for_entity(entity, component_type)
+            return self.entity_manager.get_component_safe(entity, component_type)
         return None
+
+    def remove_entity(self, entity: Entity) -> None:
+        """Remove an entity from the entity manager"""
+        if self._is_entity_manager(self.entity_manager):
+            self.entity_manager.remove_entity(entity)
 
     @abstractmethod
     def update(self, dt: float) -> None:
