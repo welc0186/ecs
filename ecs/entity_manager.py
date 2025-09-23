@@ -59,6 +59,17 @@ class EntityManager:
 
         self._database[component_type][entity] = component_instance
 
+    def add_components(
+        self, entity: Entity, component_instances: list[Component]
+    ) -> None:
+        """Add multiple components to the database and associate them with the given entity.
+        Args:
+            entity: The entity to associate with the components.
+            component_instances: A list of component instances to add to the entity.
+        """
+        for component_instance in component_instances:
+            self.add_component(entity, component_instance)
+
     def remove_component(self, entity: Entity, component_type: Type[C]) -> None:
         """Remove the component of the specified type associated with the entity.
 
