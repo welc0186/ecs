@@ -1,6 +1,7 @@
 """Entity and System Managers."""
 
 from ecs.exceptions import DuplicateSystemTypeError, SystemAlreadyAddedToManagerError
+from typing import Any, Tuple
 
 
 class SystemManager(object):
@@ -50,6 +51,17 @@ class SystemManager(object):
 
         system_instance.priority = priority
         self._systems.sort(key=lambda x: x.priority)
+
+    def add_systems(self, system_instances: list[Tuple[Any, int]]):
+        """Add multiple :class:`ecs.system.System` instances to the manager.
+
+        :param Tuple[system_instance, int]: tuple of system instance and
+            priority (non-negative integer)
+        :type Tuple[system_instance, int]: :class:`tuple` of
+            (:class:`ecs.system.System`, :class:`int`)
+        """
+        for system_instance, priority in system_instances:
+            self.add_system(system_instance, priority)
 
     def remove_system(self, system_type):
         """Tell the manager to no longer run the system of this type.
