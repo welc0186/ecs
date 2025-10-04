@@ -91,26 +91,18 @@ class EntityManager:
     def pairs_for_type(self, component_type: Type[C]) -> Iterator[Tuple[Entity, C]]:
         """Return an iterator over (entity, component_instance) tuples.
 
-        Returns all entities in the database possessing a component of the specified type.
-        Returns an empty iterator if there are no components of this type in the database.
-
-        Example usage:
-            for entity, renderable_component in entity_manager.pairs_for_type(Renderable):
-                # do something with entity and renderable_component
-                pass
-
-        Args:
-            component_type: The type of component to search for.
-
-        Returns:
-            An iterator yielding (entity, component_instance) tuples.
+        Returns all entities in the database possessing a component of the specified type
+        or any subclass of that type.
         """
-        try:
-            component_dict = self._database[component_type]
-            # Cast is safe because we know the components in this dict are of type C
-            return cast(Iterator[Tuple[Entity, C]], iter(component_dict.items()))
-        except KeyError:
-            return iter([])  # Return empty iterator instead of using six.iteritems
+
+        def generate_pairs():
+            for stored_type, component_dict in self._database.items():
+                # Check if stored_type is the requested type or a subclass of it
+                if issubclass(stored_type, component_type):
+                    for entity, component in component_dict.items():
+                        yield entity, component
+
+        return cast(Iterator[Tuple[Entity, C]], generate_pairs())
 
     def component_for_entity(self, entity: Entity, component_type: Type[C]) -> C:
         """Return the instance of the specified component type for the entity.
@@ -180,6 +172,25 @@ class EntityManager:
             return iter(self._database[component_type].keys())
         except KeyError:
             return iter([])
+
+    def entity_for_component(self, component_instance: Component) -> Optional[Entity]:
+        """Return the entity associated with the given component instance.
+
+        Args:
+            component_instance: The component instance to search for.
+
+        Returns:
+            The entity associated with the component instance, or None if not found.
+        """
+        component_type = type(component_instance)
+        try:
+            component_dict = self._database[component_type]
+            for entity, instance in component_dict.items():
+                if instance is component_instance:
+                    return entity
+            return None
+        except KeyError:
+            return None
 
     def components_for_entity(self, entity: Entity) -> Iterator[Component]:
         """Return an iterator over all components associated with the entity.
